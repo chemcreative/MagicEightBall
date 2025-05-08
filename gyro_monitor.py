@@ -77,13 +77,22 @@ def detect_shake(accel_values):
     return any(diff > SHAKE_THRESHOLD for diff in diffs)
 
 def launch_main():
-    """Send signal to main.py to process current audio"""
+    """Launch main.py in a new terminal window"""
     try:
-        print("\nShake detected! Processing current audio...")
-        # Send signal to main.py to process current audio
-        os.system("echo 'SHAKE' > shake_signal.txt")
+        print("\nShake detected! Launching Magic Eight Ball...")
+        # Get the directory of the current script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        main_path = os.path.join(script_dir, "main.py")
+        
+        # Launch main.py in a new terminal window
+        if sys.platform == "win32":
+            subprocess.Popen(['start', 'cmd', '/k', 'python', main_path], shell=True)
+        else:  # For Linux/Mac
+            subprocess.Popen(['gnome-terminal', '--', 'python3', main_path])
+            
+        print("Magic Eight Ball activated! Continue monitoring for next shake...")
     except Exception as e:
-        print(f"Error sending signal: {e}")
+        print(f"Error launching main.py: {e}")
 
 def monitor_gyroscope():
     """Monitor and display gyroscope data"""
@@ -97,7 +106,8 @@ def monitor_gyroscope():
 
         MPU_Init()
         print("\nMonitoring for shakes... Press Ctrl+C to stop")
-        print("Shake the device to process current audio")
+        print("Shake the device to activate the Magic Eight Ball")
+        print("The gyroscope will continue monitoring for the next shake")
         
         while True:
             try:

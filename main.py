@@ -371,9 +371,9 @@ class SpeechSystem:
                     elif is_speaking and audio_level < SILENCE_THRESHOLD:
                         self.silence_counter += 1
                         if self.silence_counter >= int(SILENCE_DURATION * SAMPLE_RATE / CHUNK_SIZE):
-                            print("\nProcessing...")
+                            print("\nWaiting for shake to process question...")
                             is_speaking = False
-                            self.state = ConversationState.PROCESSING
+                            # Don't change state here, wait for shake
                     
                     # Process audio if we have enough and speech has stopped
                     current_time = time.time()
