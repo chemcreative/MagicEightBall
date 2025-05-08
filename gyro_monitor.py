@@ -4,6 +4,10 @@ import subprocess
 import os
 import sys
 import signal
+import locale
+
+# Set locale to UTF-8
+locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 # MPU6050 Registers and their Address
 PWR_MGMT_1   = 0x6B
@@ -19,9 +23,12 @@ GYRO_YOUT_H  = 0x45
 GYRO_ZOUT_H  = 0x47
 
 # Shake detection parameters
-SHAKE_THRESHOLD = 1.5  # Adjust this value to change sensitivity
+SHAKE_THRESHOLD = 2.5  # Increased threshold for more intense shake required
 SAMPLES_TO_CHECK = 5   # Number of samples to check for shake
+SHAKE_COOLDOWN = 3.0   # Seconds to wait after detecting a shake
 last_accel_values = []  # Store last few acceleration values
+last_shake_time = 0    # Track when the last shake was detected
+is_listening = False   # Track if we're in listening mode
 
 def cleanup_and_exit():
     """Clean up and exit the program"""
@@ -64,6 +71,13 @@ def read_raw_data(addr):
 
 def detect_shake(accel_values):
     """Detect if the device has been shaken based on acceleration changes"""
+    global last_shake_time, is_listening
+    
+    # Check if we're in cooldown period
+    current_time = time.time()
+    if current_time - last_shake_time < SHAKE_COOLDOWN:
+        return False
+    
     if len(accel_values) < SAMPLES_TO_CHECK:
         return False
     
@@ -74,7 +88,14 @@ def detect_shake(accel_values):
         diffs.append(diff)
     
     # Check if any difference exceeds the threshold
-    return any(diff > SHAKE_THRESHOLD for diff in diffs)
+    is_shake = any(diff > SHAKE_THRESHOLD for diff in diffs)
+    
+    if is_shake:
+        last_shake_time = current_time
+        is_listening = not is_listening  # Toggle listening state
+        return True
+    
+    return False
 
 def launch_main():
     """Launch main.py in a new terminal window"""
@@ -138,7 +159,8 @@ def monitor_gyroscope():
                 
                 # Check for shake
                 if detect_shake([acc[0] for acc in last_accel_values]):  # Check X-axis
-                    launch_main()  # This will exit the script after launching main.py
+                    if not is_listening:  # Only launch if we're not already listening
+                        launch_main()
                 
                 print(f"\rGx={Gx:+.2f}°/s  Gy={Gy:+.2f}°/s  Gz={Gz:+.2f}°/s  Ax={Ax:+.2f}g  Ay={Ay:+.2f}g  Az={Az:+.2f}g", end='')
                 sleep(0.1)  # Update every 100ms
