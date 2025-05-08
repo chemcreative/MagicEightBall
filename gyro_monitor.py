@@ -86,9 +86,9 @@ def launch_main():
         
         # Launch main.py in a new terminal window
         if sys.platform == "win32":
-            subprocess.Popen(['start', 'cmd', '/k', 'python', main_path], shell=True)
-        else:  # For Linux/Mac
-            subprocess.Popen(['gnome-terminal', '--', 'python3', main_path])
+            subprocess.Popen(['cmd', '/c', 'start', 'cmd', '/k', f'python "{main_path}"'], shell=True)
+        else:  # For Linux/Raspberry Pi
+            subprocess.Popen(['lxterminal', '-e', f'python3 {main_path}'])
             
         print("Magic Eight Ball activated! Continue monitoring for next shake...")
     except Exception as e:
