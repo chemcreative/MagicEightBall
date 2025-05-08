@@ -4,10 +4,6 @@ import subprocess
 import os
 import sys
 import signal
-import locale
-
-# Set locale to UTF-8
-locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 # MPU6050 Registers and their Address
 PWR_MGMT_1   = 0x6B
